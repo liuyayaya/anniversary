@@ -1,0 +1,310 @@
+/* pages/detail/detail.wxss */
+.container {
+  min-height: 100vh;
+  background: #f8f8f8;
+}
+
+.header {
+  position: relative;
+  height: 300rpx;
+  overflow: hidden;
+}
+
+.header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #ff6b9d, #ff9a8b);
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+  padding: 40rpx 30rpx;
+  color: #fff;
+}
+
+.title {
+  font-size: 44rpx;
+  font-weight: bold;
+  display: block;
+}
+
+.date {
+  font-size: 26rpx;
+  opacity: 0.9;
+  margin-top: 10rpx;
+  display: block;
+}
+
+.header-actions {
+  margin-top: 20rpx;
+}
+
+.action-btn {
+  display: inline-block;
+  padding: 10rpx 30rpx;
+  background: rgba(255,255,255,0.3);
+  border: 1rpx solid rgba(255,255,255,0.5);
+  border-radius: 30rpx;
+  color: #fff;
+  font-size: 24rpx;
+}
+
+.section {
+  padding: 30rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.add-btn {
+  color: #ff6b9d;
+  font-size: 28rpx;
+}
+
+.empty-tip {
+  text-align: center;
+  color: #999;
+  padding: 60rpx;
+  font-size: 26rpx;
+}
+
+/* 回忆 */
+.memory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.memory-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+}
+
+.memory-content {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+}
+
+.memory-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 20rpx;
+}
+
+.memory-img {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 12rpx;
+}
+
+.memory-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f5f5f5;
+}
+
+.memory-date {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.memory-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.memory-actions text {
+  font-size: 24rpx;
+  color: #ff6b9d;
+}
+
+/* 心愿 */
+.wish-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.wish-item {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+
+.wish-item.done {
+  opacity: 0.6;
+}
+
+.wish-item.done .wish-title {
+  text-decoration: line-through;
+}
+
+.wish-check {
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+
+.wish-info {
+  flex: 1;
+}
+
+.wish-title {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.wish-meta {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.wish-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.wish-actions text {
+  font-size: 24rpx;
+  color: #ff6b9d;
+}
+
+/* 弹窗 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 30rpx 30rpx 0 0;
+  padding: 30rpx;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close {
+  font-size: 36rpx;
+  color: #999;
+  padding: 10rpx;
+}
+
+.modal-input {
+  width: 100%;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.image-upload {
+  margin-bottom: 30rpx;
+}
+
+.image-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.image-item {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+}
+
+.image-item image {
+  width: 100%;
+  height: 100%;
+  border-radius: 12rpx;
+}
+
+.image-item .remove {
+  position: absolute;
+  top: -10rpx;
+  right: -10rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: #ff6b9d;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-image {
+  width: 160rpx;
+  height: 160rpx;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60rpx;
+  color: #ccc;
+}
+
+.modal-btn {
+  background: linear-gradient(135deg, #ff6b9d, #ff9a8b);
+  color: #fff;
+  border: none;
+  border-radius: 50rpx;
+  height: 90rpx;
+  line-height: 90rpx;
+  font-size: 30rpx;
+}

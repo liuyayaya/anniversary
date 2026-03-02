@@ -1,0 +1,54 @@
+<!--pages/wish/wish.wxml-->
+<view class="container">
+  <!-- 筛选 -->
+  <view class="filter">
+    <view class="filter-item {{filter === 'all' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="all">全部</view>
+    <view class="filter-item {{filter === 'pending' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="pending">待实现</view>
+    <view class="filter-item {{filter === 'done' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="done">已实现</view>
+  </view>
+
+  <!-- 列表 -->
+  <view class="wish-list">
+    <block wx:for="{{wishes}}" wx:key="_id">
+      <view class="wish-item {{item.status === 'done' ? 'done' : ''}}">
+        <view class="wish-check" bindtap="toggleStatus" data-wish="{{item}}">
+          <text wx:if="{{item.status === 'done'}}">✅</text>
+          <text wx:else>⬜</text>
+        </view>
+        <view class="wish-info" bindtap="openModal" data-wish="{{item}}">
+          <text class="wish-title">{{item.title}}</text>
+          <view class="wish-meta">
+            <text wx:if="{{item.price}}">💰 {{item.price}}元</text>
+            <text wx:if="{{item.sendTo}}">📤 {{item.sendTo}}</text>
+          </view>
+        </view>
+        <view class="wish-actions">
+          <text catchtap="openModal" data-wish="{{item}}">编辑</text>
+          <text catchtap="delete" data-id="{{item._id}}">删除</text>
+        </view>
+      </view>
+    </block>
+
+    <view wx:if="{{wishes.length === 0}}" class="empty">
+      <text>还没有心愿～</text>
+    </view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="add-btn" bindtap="openModal">+</view>
+
+  <!-- 弹窗 -->
+  <view class="modal" wx:if="{{showModal}}">
+    <view class="modal-mask" bindtap="closeModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text>{{editingWish ? '编辑心愿' : '添加心愿'}}</text>
+        <text class="close" bindtap="closeModal">✕</text>
+      </view>
+      <input class="modal-input" placeholder="想要什么礼物？" value="{{wishTitle}}" bindinput="onTitleInput"/>
+      <input class="modal-input" type="digit" placeholder="价格（可选）" value="{{wishPrice}}" bindinput="onPriceInput"/>
+      <input class="modal-input" placeholder="发送给谁？如：老公" value="{{wishSendTo}}" bindinput="onSendToInput"/>
+      <button class="modal-btn" bindtap="save">保存</button>
+    </view>
+  </view>
+</view>

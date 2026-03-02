@@ -1,0 +1,143 @@
+<!--pages/detail/detail.wxml-->
+<view class="container">
+  <!-- 头部信息 -->
+  <view class="header" wx:if="{{anniversary}}">
+    <view class="header-bg"></view>
+    <view class="header-content">
+      <text class="title">{{anniversary.title}}</text>
+      <text class="date">{{anniversary.date}} · {{anniversary.cycleText}}</text>
+      <view class="header-actions">
+        <button class="action-btn" bindtap="goToEdit">编辑</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 回忆部分 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">📝 回忆</text>
+      <text class="add-btn" bindtap="openMemoryModal">+ 添加</text>
+    </view>
+    
+    <view class="memory-list" wx:if="{{memories.length > 0}}">
+      <block wx:for="{{memories}}" wx:key="_id">
+        <view class="memory-item">
+          <view class="memory-content">{{item.content}}</view>
+          <view class="memory-images" wx:if="{{item.images && item.images.length > 0}}">
+            <block wx:for="{{item.images}}" wx:for-item="img" wx:key="*this">
+              <image 
+                class="memory-img" 
+                src="{{img}}" 
+                mode="aspectFill"
+                bindtap="previewImage"
+                data-url="{{img}}"
+                data-urls="{{item.images}}"
+              />
+            </block>
+          </view>
+          <view class="memory-footer">
+            <text class="memory-date">{{item.createdAt}}</text>
+            <view class="memory-actions">
+              <text catchtap="editMemory" data-memory="{{item}}">编辑</text>
+              <text catchtap="deleteMemory" data-id="{{item._id}}">删除</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+    <view wx:else class="empty-tip">暂无回忆，记录第一个瞬间吧～</view>
+  </view>
+
+  <!-- 心愿清单 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">🎁 心愿清单</text>
+      <text class="add-btn" bindtap="openWishModal">+ 添加</text>
+    </view>
+    
+    <view class="wish-list" wx:if="{{wishes.length > 0}}">
+      <block wx:for="{{wishes}}" wx:key="_id">
+        <view class="wish-item {{item.status === 'done' ? 'done' : ''}}">
+          <view class="wish-check" catchtap="toggleWishStatus" data-wish="{{item}}">
+            <text wx:if="{{item.status === 'done'}}">✅</text>
+            <text wx:else>⬜</text>
+          </view>
+          <view class="wish-info">
+            <text class="wish-title">{{item.title}}</text>
+            <view class="wish-meta">
+              <text wx:if="{{item.price}}">💰 {{item.price}}元</text>
+              <text wx:if="{{item.sendTo}}">📤 发送给：{{item.sendTo}}</text>
+            </view>
+          </view>
+          <view class="wish-actions">
+            <text catchtap="editWish" data-wish="{{item}}">编辑</text>
+            <text catchtap="deleteWish" data-id="{{item._id}}">删除</text>
+          </view>
+        </view>
+      </block>
+    </view>
+    <view wx:else class="empty-tip">心愿清单是空的～</view>
+  </view>
+
+  <!-- 回忆弹窗 -->
+  <view class="modal" wx:if="{{showMemoryModal}}">
+    <view class="modal-mask" bindtap="closeMemoryModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text>添加回忆</text>
+        <text class="close" bindtap="closeMemoryModal">✕</text>
+      </view>
+      <textarea 
+        class="modal-input" 
+        placeholder="记录这个特别的日子..."
+        value="{{memoryContent}}"
+        bindinput="onMemoryInput"
+      ></textarea>
+      <view class="image-upload">
+        <view class="image-list">
+          <block wx:for="{{memoryImages}}" wx:key="*this">
+            <view class="image-item">
+              <image src="{{item}}" mode="aspectFill"/>
+              <text class="remove" catchtap="removeImage" data-index="{{index}}">✕</text>
+            </view>
+          </block>
+          <view class="add-image" bindtap="chooseImage" wx:if="{{memoryImages.length < 9}}">
+            <text>+</text>
+          </view>
+        </view>
+      </view>
+      <button class="modal-btn" bindtap="saveMemory">保存</button>
+    </view>
+  </view>
+
+  <!-- 心愿弹窗 -->
+  <view class="modal" wx:if="{{showWishModal}}">
+    <view class="modal-mask" bindtap="closeWishModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text>添加心愿</text>
+        <text class="close" bindtap="closeWishModal">✕</text>
+      </view>
+      <input 
+        class="modal-input" 
+        placeholder="想要什么礼物？"
+        value="{{wishTitle}}"
+        bindinput="onWishTitleInput"
+      />
+      <input 
+        class="modal-input" 
+        type="digit"
+        placeholder="价格（可选）"
+        value="{{wishPrice}}"
+        bindinput="onWishPriceInput"
+      />
+      <input 
+        class="modal-input" 
+        placeholder="发送给谁？如：老公"
+        value="{{wishSendTo}}"
+        bindinput="onWishSendToInput"
+      />
+      <button class="modal-btn" bindtap="saveWish">保存</button>
+    </view>
+  </view>
+</view>

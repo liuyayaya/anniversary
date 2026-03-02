@@ -1,0 +1,173 @@
+/* pages/timeline/timeline.wxss */
+.container {
+  min-height: 100vh;
+  background: #f8f8f8;
+  padding: 30rpx;
+}
+
+.year-selector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40rpx;
+}
+
+.year-picker {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  padding: 16rpx 40rpx;
+  border-radius: 40rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+}
+
+.year-text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #ff6b9d;
+  margin-right: 10rpx;
+}
+
+.arrow {
+  font-size: 20rpx;
+  color: #ff6b9d;
+}
+
+/* 时间线 */
+.timeline {
+  position: relative;
+  padding-left: 40rpx;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 15rpx;
+  top: 0;
+  bottom: 0;
+  width: 2rpx;
+  background: #e0e0e0;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 40rpx;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -34rpx;
+  top: 10rpx;
+  width: 20rpx;
+  height: 20rpx;
+  background: #ff6b9d;
+  border-radius: 50%;
+  border: 4rpx solid #fff;
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 157, 0.3);
+}
+
+.timeline-dot.pink {
+  background: #ff9a8b;
+}
+
+.timeline-date {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 10rpx;
+  margin-left: 20rpx;
+}
+
+.timeline-content {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+
+.timeline-icon {
+  width: 80rpx;
+  height: 80rpx;
+  background: #ffe6ee;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.timeline-info {
+  flex: 1;
+}
+
+.timeline-title {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+  display: block;
+}
+
+.timeline-subtitle {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 6rpx;
+  display: block;
+}
+
+/* 回忆样式 */
+.timeline-content.memory-content {
+  display: block;
+}
+
+.memory-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.memory-icon {
+  font-size: 32rpx;
+  margin-right: 10rpx;
+}
+
+.memory-title {
+  font-size: 28rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.memory-text {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+}
+
+.memory-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.memory-images image {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 12rpx;
+}
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  padding: 100rpx 30rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.empty-tip {
+  display: block;
+  font-size: 24rpx;
+  margin-top: 20rpx;
+  color: #ccc;
+}

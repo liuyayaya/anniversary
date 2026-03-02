@@ -1,0 +1,56 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <!-- 头部欢迎 -->
+  <view class="header">
+    <text class="title">❤️ 纪念日提醒</text>
+    <text class="subtitle">记录每一个特别的日子</text>
+  </view>
+
+  <!-- 即将到来 -->
+  <view class="section" wx:if="{{upcomingList.length > 0}}">
+    <view class="section-title">🎉 即将到来</view>
+    <scroll-view scroll-x class="upcoming-scroll">
+      <view class="upcoming-list">
+        <block wx:for="{{upcomingList}}" wx:key="_id">
+          <view class="upcoming-card" bindtap="goToDetail" data-id="{{item._id}}">
+            <text class="upcoming-days">{{item.daysDiff}}天</text>
+            <text class="upcoming-title">{{item.title}}</text>
+            <text class="upcoming-date">{{item.date}}</text>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 纪念日列表 -->
+  <view class="section">
+    <view class="section-title">📅 所有纪念日</view>
+    <view class="list">
+      <block wx:for="{{anniversaries}}" wx:key="_id">
+        <view class="anniversary-item" bindtap="goToDetail" data-id="{{item._id}}">
+          <view class="item-left">
+            <view class="item-icon">
+              <text wx:if="{{item.type === 'birthday'}}">🎂</text>
+              <text wx:elif="{{item.type === 'anniversary'}}">💑</text>
+              <text wx:else>📌</text>
+            </view>
+            <view class="item-info">
+              <text class="item-title">{{item.title}}</text>
+              <text class="item-date">{{item.date}} · {{item.cycleText}}</text>
+            </view>
+          </view>
+          <view class="item-right" catchtap="deleteAnniversary" data-id="{{item._id}}">
+            <text class="delete-btn">🗑️</text>
+          </view>
+        </view>
+      </block>
+      
+      <view wx:if="{{anniversaries.length === 0}}" class="empty">
+        <text>还没有纪念日，添加一个吧～</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="add-btn" bindtap="goToAdd">+</view>
+</view>

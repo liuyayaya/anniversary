@@ -1,0 +1,66 @@
+<!--pages/timeline/timeline.wxml-->
+<view class="container">
+  <!-- 年份选择 -->
+  <view class="year-selector" wx:if="{{years.length > 0}}">
+    <picker mode="selector" range="{{years}}" bindchange="onYearChange">
+      <view class="year-picker">
+        <text class="year-text">{{selectedYear}}年</text>
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 时间线 -->
+  <view class="timeline" wx:if="{{selectedYear}}">
+    <block wx:for="{{timeline}}" wx:key="*this">
+      <view wx:if="{{new Date(item.date).getFullYear() === selectedYear}}">
+        <!-- 纪念日节点 -->
+        <view class="timeline-item" wx:if="{{item.type === 'anniversary'}}" bindtap="goToDetail" data-id="{{item.data._id}}">
+          <view class="timeline-dot"></view>
+          <view class="timeline-date">{{item.date}}</view>
+          <view class="timeline-content">
+            <view class="timeline-icon">
+              <text wx:if="{{item.data.type === 'birthday'}}">🎂</text>
+              <text wx:elif="{{item.data.type === 'anniversary'}}">💑</text>
+              <text wx:else>📌</text>
+            </view>
+            <view class="timeline-info">
+              <text class="timeline-title">{{item.title}}</text>
+              <text class="timeline-subtitle">{{item.subtitle}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 回忆节点 -->
+        <view class="timeline-item memory" wx:if="{{item.type === 'memory'}}">
+          <view class="timeline-dot pink"></view>
+          <view class="timeline-date">{{item.date}}</view>
+          <view class="timeline-content memory-content">
+            <view class="memory-header">
+              <text class="memory-icon">📝</text>
+              <text class="memory-title">{{item.title}}</text>
+            </view>
+            <view class="memory-text">{{item.content}}</view>
+            <view class="memory-images" wx:if="{{item.images && item.images.length > 0}}">
+              <block wx:for="{{item.images}}" wx:for-item="img" wx:key="*this">
+                <image 
+                  src="{{img}}" 
+                  mode="aspectFill"
+                  bindtap="previewImage"
+                  data-url="{{img}}"
+                  data-urls="{{item.images}}"
+                />
+              </block>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{years.length === 0}}">
+    <text>暂无时间轨迹</text>
+    <text class="empty-tip">添加纪念日和回忆后可以看到</text>
+  </view>
+</view>

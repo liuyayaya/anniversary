@@ -1,0 +1,43 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/add/add",
+    "pages/detail/detail",
+    "pages/timeline/timeline",
+    "pages/wish/wish"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ff6b9d",
+    "navigationBarTitleText": "纪念日提醒",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#ff6b9d",
+    "backgroundColor": "#fff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "icons/home.png",
+        "selectedIconPath": "icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/timeline/timeline",
+        "text": "时间轨迹",
+        "iconPath": "icons/time.png",
+        "selectedIconPath": "icons/time-active.png"
+      }
+    ]
+  },
+  "permission": {
+    "scope.writeCalendar": {
+      "desc": "用于纪念日提醒"
+    }
+  },
+  "requiredBackgroundModes": ["background-fetch", "background-audio"],
+  "cloud": true,
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}
