@@ -10,7 +10,7 @@ Page({
     cycle: 'yearly', // daily | weekly | monthly | yearly
     reminder: true,
     reminderDays: 3,
-    addToCalendar: true, // 新增：添加到手机日历
+    addToCalendar: true, // 添加到手机日历
     types: [
       { value: 'birthday', label: '🎂 生日', icon: '🎂' },
       { value: 'anniversary', label: '💑 纪念日', icon: '💑' },
@@ -87,63 +87,75 @@ Page({
     this.setData({ addToCalendar: e.detail.value });
   },
 
-  // 添加到手机日历
-  async addToPhoneCalendar(title, date, cycle) {
-    return new Promise((resolve, reject) => {
-      // 根据循环周期设置重复规则
-      let recurrenceRule = '';
-      let repeatInterval = 1;
-      
-      switch (cycle) {
-        case 'daily':
-          recurrenceRule = 'daily';
-          break;
-        case 'weekly':
-          recurrenceRule = 'weekly';
-          break;
-        case 'monthly':
-          recurrenceRule = 'monthly';
-          break;
-        case 'yearly':
-          recurrenceRule = 'yearly';
-          break;
+  // 生成日历文件 (.ics)
+  generateICS(title, date, cycle) {
+    const [year, month, day] = date.split('-').map(Number);
+    
+    // 循环规则映射
+    const freqMap = {
+      'daily': 'DAILY',
+      'weekly': 'WEEKLY', 
+      'monthly': 'MONTHLY',
+      'yearly': 'YEARLY'
+    };
+    
+    const freq = freqMap[cycle] || 'YEARLY';
+    
+    // 格式化日期时间 (YYYYMMDDTHHMMSS)
+    const formatDateTime = (d) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const h = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      const s = String(d.getSeconds()).padStart(2, '0');
+      return `${y}${m}${dd}T${h}${min}${s}`;
+    };
+    
+    // 计算明年的日期（避免已过去的日期）
+    const now = new Date();
+    let eventDate = new Date(year, month - 1, day, 9, 0, 0);
+    
+    if (eventDate <= now) {
+      if (cycle === 'yearly') {
+        eventDate.setFullYear(now.getFullYear() + 1);
+      } else if (cycle === 'monthly') {
+        eventDate.setMonth(now.getMonth() + 1);
+      } else if (cycle === 'weekly') {
+        eventDate.setDate(now.getDate() + 7);
       }
-
-      // 解析日期
-      const [year, month, day] = date.split('-').map(Number);
-      
-      // 计算下一次的日期（从明天开始）
-      const now = new Date();
-      let startDate = new Date(year, month - 1, day, 9, 0, 0);
-      
-      // 如果今年的日期已过，调整到明年（年度）/下月（月度）/下周（周度）
-      if (startDate <= now) {
-        switch (cycle) {
-          case 'yearly':
-            startDate.setFullYear(now.getFullYear() + 1);
-            break;
-          case 'monthly':
-            startDate.setMonth(now.getMonth() + 1);
-            break;
-          case 'weekly':
-            startDate.setDate(now.getDate() + 7);
-            break;
-        }
-      }
-
-      const startTime = startDate.getTime();
-      const endTime = startTime + 60 * 60 * 1000; // 1小时
-
-      wx.addPhoneCalendar({
-        title: title,
-        startTime: startTime / 1000, // 转换为秒
-        endTime: endTime / 1000,
-        allDay: false,
-        recurrenceRule: recurrenceRule,
-        success: () => resolve(),
-        fail: (err) => reject(err)
-      });
-    });
+    }
+    
+    const startDT = formatDateTime(eventDate);
+    const endDT = formatDateTime(new Date(eventDate.getTime() + 60 * 60 * 1000));
+    
+    // 生成唯一ID
+    const uid = `anniversary-${Date.now()}@anniversary-miniprogram`;
+    
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Anniversary Reminder//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'X-WR-CALNAME:纪念日提醒',
+      'BEGIN:VEVENT',
+      `DTSTART;TZID=Asia/Shanghai:${startDT}`,
+      `DTEND;TZID=Asia/Shanghai:${endDT}`,
+      `RRULE:FREQ=${freq}`,
+      `SUMMARY:${title}`,
+      `UID:${uid}`,
+      'SEQUENCE:0',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT30M',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:30分钟后提醒',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+    
+    return icsContent;
   },
 
   // 保存
@@ -185,16 +197,39 @@ Page({
       // 如果开启了添加到日历
       if (addToCalendar && !id) {
         try {
-          await this.addToPhoneCalendar(title, date, cycle);
-          wx.showToast({ title: '已添加到日历', icon: 'success' });
+          // 生成 .ics 文件内容
+          const icsContent = this.generateICS(title, date, cycle);
+          
+          // 保存到本地文件
+          const filePath = `${wx.env.USER_DATA_PATH}/${title}-${Date.now()}.ics`;
+          const fs = wx.getFileSystemManager();
+          fs.writeFileSync(filePath, icsContent, 'utf8');
+          
+          // 分享文件给用户
+          wx.showModal({
+            title: '添加到手机日历',
+            content: '点击"确定"后，在新页面点击右上角分享，选择"保存到文件"或用其他应用打开',
+            confirmText: '确定',
+            success: (res) => {
+              if (res.confirm) {
+                wx.openDocument({
+                  filePath: filePath,
+                  fileType: 'ics',
+                  showMenu: true,
+                  success: () => {
+                    console.log('打开成功');
+                  },
+                  fail: (err) => {
+                    console.error('打开失败:', err);
+                    wx.showToast({ title: '请用其他方式打开', icon: 'none' });
+                  }
+                });
+              }
+            }
+          });
         } catch (calErr) {
-          // 用户拒绝权限或日历添加失败
-          console.error('添加到日历失败:', calErr);
-          if (calErr.errMsg.includes('auth deny')) {
-            wx.showToast({ title: '已保存（日历权限被拒绝）', icon: 'none' });
-          } else {
-            wx.showToast({ title: '已保存', icon: 'success' });
-          }
+          console.error('生成日历文件失败:', calErr);
+          wx.showToast({ title: '已保存', icon: 'success' });
         }
       } else {
         wx.showToast({ title: '保存成功', icon: 'success' });
