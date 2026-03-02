@@ -66,6 +66,17 @@
         </view>
       </picker>
     </view>
+
+    <!-- 添加到手机日历 -->
+    <view class="form-item">
+      <view class="switch-row">
+        <view class="label-wrap">
+          <text class="label">📅 添加到手机日历</text>
+          <text class="label-tip">自动同步到 iPhone 日历</text>
+        </view>
+        <switch checked="{{addToCalendar}}" bindchange="onCalendarChange" color="#ff6b9d"/>
+      </view>
+    </view>
   </view>
 
   <!-- 保存按钮 -->

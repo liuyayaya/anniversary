@@ -28,6 +28,17 @@
   margin-bottom: 20rpx;
 }
 
+.label-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.label-tip {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+
 .input {
   font-size: 30rpx;
   color: #333;
