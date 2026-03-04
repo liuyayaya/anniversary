@@ -1,50 +1,41 @@
-// pages/wish/wish.js
-const db = wx.cloud.database();
+// pages/wish/wish.js - 本地存储版
+const WISHES_KEY = 'wishes';
 
 Page({
   data: {
     wishes: [],
-    filter: 'all', // all | pending | done
-    editingWish: null,
+    filter: 'all',
     showModal: false,
     wishTitle: '',
     wishPrice: '',
-    wishSendTo: ''
+    wishSendTo: '',
+    editingWish: null
   },
 
   onShow() {
     this.loadWishes();
   },
 
-  async loadWishes() {
-    wx.showLoading({ title: '加载中...' });
-    try {
-      let query = db.collection('wishes').orderBy('createdAt', 'desc');
-      
-      const { data } = await query.get();
-      
-      let filtered = data;
-      if (this.data.filter !== 'all') {
-        filtered = data.filter(w => w.status === this.data.filter);
-      }
-      
-      this.setData({ wishes: filtered });
-    } catch (err) {
-      console.error(err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
-    } finally {
-      wx.hideLoading();
+  loadWishes() {
+    let data = wx.getStorageSync(WISHES_KEY) || [];
+    
+    // 按时间排序
+    data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    let filtered = data;
+    if (this.data.filter !== 'all') {
+      filtered = data.filter(w => w.status === this.data.filter);
     }
+    
+    this.setData({ wishes: filtered });
   },
 
-  // 切换筛选
   onFilterChange(e) {
     const filter = e.currentTarget.dataset.filter;
     this.setData({ filter });
     this.loadWishes();
   },
 
-  // 打开弹窗
   openModal(e) {
     const wish = e.currentTarget.dataset.wish;
     if (wish) {
@@ -66,18 +57,15 @@ Page({
     }
   },
 
-  // 关闭弹窗
   closeModal() {
     this.setData({ showModal: false });
   },
 
-  // 输入
   onTitleInput(e) { this.setData({ wishTitle: e.detail.value }); },
   onPriceInput(e) { this.setData({ wishPrice: e.detail.value }); },
   onSendToInput(e) { this.setData({ wishSendTo: e.detail.value }); },
 
-  // 保存
-  async save() {
+  save() {
     if (!this.data.wishTitle.trim()) {
       wx.showToast({ title: '请输入心愿', icon: 'none' });
       return;
@@ -85,21 +73,28 @@ Page({
 
     wx.showLoading({ title: '保存中...' });
     try {
+      const allWishes = wx.getStorageSync(WISHES_KEY) || [];
+      
       const data = {
         title: this.data.wishTitle.trim(),
         price: this.data.wishPrice ? parseFloat(this.data.wishPrice) : 0,
         sendTo: this.data.wishSendTo.trim(),
-        updatedAt: db.serverDate()
+        updatedAt: new Date().toISOString()
       };
 
       if (this.data.editingWish) {
-        await db.collection('wishes').doc(this.data.editingWish).update({ data });
+        const index = allWishes.findIndex(w => w._id === this.data.editingWish);
+        if (index !== -1) {
+          allWishes[index] = { ...allWishes[index], ...data };
+        }
       } else {
+        data._id = Date.now().toString();
         data.status = 'pending';
-        data.createdAt = db.serverDate();
-        await db.collection('wishes').add({ data });
+        data.createdAt = new Date().toISOString();
+        allWishes.push(data);
       }
 
+      wx.setStorageSync(WISHES_KEY, allWishes);
       this.closeModal();
       this.loadWishes();
       wx.showToast({ title: '保存成功' });
@@ -111,25 +106,28 @@ Page({
     }
   },
 
-  // 切换状态
-  async toggleStatus(e) {
+  toggleStatus(e) {
     const wish = e.currentTarget.dataset.wish;
-    const newStatus = wish.status === 'pending' ? 'done' : 'pending';
-    await db.collection('wishes').doc(wish._id).update({
-      data: { status: newStatus }
-    });
-    this.loadWishes();
+    const allWishes = wx.getStorageSync(WISHES_KEY) || [];
+    const index = allWishes.findIndex(w => w._id === wish._id);
+    
+    if (index !== -1) {
+      allWishes[index].status = wish.status === 'pending' ? 'done' : 'pending';
+      wx.setStorageSync(WISHES_KEY, allWishes);
+      this.loadWishes();
+    }
   },
 
-  // 删除
-  async delete(e) {
+  deleteWish(e) {
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: '确认删除',
       content: '确定删除这个心愿吗？',
-      success: async (res) => {
+      success: (res) => {
         if (res.confirm) {
-          await db.collection('wishes').doc(id).remove();
+          const allWishes = wx.getStorageSync(WISHES_KEY) || [];
+          const newList = allWishes.filter(w => w._id !== id);
+          wx.setStorageSync(WISHES_KEY, newList);
           this.loadWishes();
           wx.showToast({ title: '已删除' });
         }

@@ -1,5 +1,7 @@
-// pages/detail/detail.js
-const db = wx.cloud.database();
+// pages/detail/detail.js - 本地存储版
+const DB_KEY = 'anniversaries';
+const MEMORIES_KEY = 'memories';
+const WISHES_KEY = 'wishes';
 
 Page({
   data: {
@@ -25,34 +27,24 @@ Page({
     }
   },
 
-  async loadData() {
-    wx.showLoading({ title: '加载中...' });
-    try {
-      // 加载纪念日
-      const { data: anniversary } = await db.collection('anniversaries').doc(this.data.id).get();
-      
-      // 加载回忆
-      const { data: memories } = await db.collection('memories')
-        .where({ anniversaryId: this.data.id })
-        .orderBy('createdAt', 'desc')
-        .get();
-      
-      // 加载心愿
-      const { data: wishes } = await db.collection('wishes')
-        .where({ anniversaryId: this.data.id })
-        .orderBy('createdAt', 'desc')
-        .get();
+  loadData() {
+    // 加载纪念日
+    const list = wx.getStorageSync(DB_KEY) || [];
+    const anniversary = list.find(i => i._id === this.data.id);
+    
+    // 加载回忆
+    const memories = (wx.getStorageSync(MEMORIES_KEY) || [])
+      .filter(m => m.anniversaryId === this.data.id)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // 加载心愿
+    const wishes = (wx.getStorageSync(WISHES_KEY) || [])
+      .filter(w => w.anniversaryId === this.data.id)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      this.setData({ anniversary, memories, wishes });
-    } catch (err) {
-      console.error(err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
-    } finally {
-      wx.hideLoading();
-    }
+    this.setData({ anniversary, memories, wishes });
   },
 
-  // 编辑纪念日
   goToEdit() {
     wx.navigateTo({ url: `/pages/add/add?id=${this.data.id}` });
   },
@@ -75,7 +67,6 @@ Page({
     this.setData({ memoryContent: e.detail.value });
   },
 
-  // 选择图片
   async chooseImage() {
     const res = await wx.chooseMedia({
       count: 9 - this.data.memoryImages.length,
@@ -89,7 +80,6 @@ Page({
     });
   },
 
-  // 删除图片
   removeImage(e) {
     const index = e.currentTarget.dataset.index;
     const images = this.data.memoryImages.filter((_, i) => i !== index);
@@ -97,7 +87,7 @@ Page({
   },
 
   // 保存回忆
-  async saveMemory() {
+  saveMemory() {
     if (!this.data.memoryContent.trim() && this.data.memoryImages.length === 0) {
       wx.showToast({ title: '内容不能为空', icon: 'none' });
       return;
@@ -105,23 +95,29 @@ Page({
 
     wx.showLoading({ title: '保存中...' });
     try {
-      // 上传图片到云存储
-      const imageUrls = await this.uploadImages(this.data.memoryImages);
+      const allMemories = wx.getStorageSync(MEMORIES_KEY) || [];
       
       const data = {
         anniversaryId: this.data.id,
         content: this.data.memoryContent.trim(),
-        images: imageUrls,
-        updatedAt: db.serverDate()
+        images: this.data.memoryImages,
+        updatedAt: new Date().toISOString()
       };
 
       if (this.data.editingMemory) {
-        await db.collection('memories').doc(this.data.editingMemory).update({ data });
+        // 编辑
+        const index = allMemories.findIndex(m => m._id === this.data.editingMemory);
+        if (index !== -1) {
+          allMemories[index] = { ...allMemories[index], ...data };
+        }
       } else {
-        data.createdAt = db.serverDate();
-        await db.collection('memories').add({ data });
+        // 新增
+        data._id = Date.now().toString();
+        data.createdAt = new Date().toISOString();
+        allMemories.push(data);
       }
 
+      wx.setStorageSync(MEMORIES_KEY, allMemories);
       this.closeMemoryModal();
       this.loadData();
       wx.showToast({ title: '保存成功' });
@@ -131,20 +127,6 @@ Page({
     } finally {
       wx.hideLoading();
     }
-  },
-
-  // 上传图片
-  async uploadImages(paths) {
-    const urls = [];
-    for (const path of paths) {
-      const cloudPath = `memories/${Date.now()}-${Math.random()}.${path.split('.').pop()}`;
-      const upload = await wx.cloud.uploadFile({
-        cloudPath,
-        filePath: path
-      });
-      urls.push(upload.fileID);
-    }
-    return urls;
   },
 
   // 编辑回忆
@@ -159,14 +141,16 @@ Page({
   },
 
   // 删除回忆
-  async deleteMemory(e) {
+  deleteMemory(e) {
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: '确认删除',
       content: '确定删除这条回忆吗？',
-      success: async (res) => {
+      success: (res) => {
         if (res.confirm) {
-          await db.collection('memories').doc(id).remove();
+          const allMemories = wx.getStorageSync(MEMORIES_KEY) || [];
+          const newList = allMemories.filter(m => m._id !== id);
+          wx.setStorageSync(MEMORIES_KEY, newList);
           this.loadData();
           wx.showToast({ title: '已删除' });
         }
@@ -195,20 +179,12 @@ Page({
     this.setData({ showWishModal: false });
   },
 
-  onWishTitleInput(e) {
-    this.setData({ wishTitle: e.detail.value });
-  },
-
-  onWishPriceInput(e) {
-    this.setData({ wishPrice: e.detail.value });
-  },
-
-  onWishSendToInput(e) {
-    this.setData({ wishSendTo: e.detail.value });
-  },
+  onWishTitleInput(e) { this.setData({ wishTitle: e.detail.value }); },
+  onWishPriceInput(e) { this.setData({ wishPrice: e.detail.value }); },
+  onWishSendToInput(e) { this.setData({ wishSendTo: e.detail.value }); },
 
   // 保存心愿
-  async saveWish() {
+  saveWish() {
     if (!this.data.wishTitle.trim()) {
       wx.showToast({ title: '请输入心愿', icon: 'none' });
       return;
@@ -216,22 +192,29 @@ Page({
 
     wx.showLoading({ title: '保存中...' });
     try {
+      const allWishes = wx.getStorageSync(WISHES_KEY) || [];
+      
       const data = {
         anniversaryId: this.data.id,
         title: this.data.wishTitle.trim(),
         price: this.data.wishPrice ? parseFloat(this.data.wishPrice) : 0,
         sendTo: this.data.wishSendTo.trim(),
         status: 'pending',
-        updatedAt: db.serverDate()
+        updatedAt: new Date().toISOString()
       };
 
       if (this.data.editingWish) {
-        await db.collection('wishes').doc(this.data.editingWish).update({ data });
+        const index = allWishes.findIndex(w => w._id === this.data.editingWish);
+        if (index !== -1) {
+          allWishes[index] = { ...allWishes[index], ...data };
+        }
       } else {
-        data.createdAt = db.serverDate();
-        await db.collection('wishes').add({ data });
+        data._id = Date.now().toString();
+        data.createdAt = new Date().toISOString();
+        allWishes.push(data);
       }
 
+      wx.setStorageSync(WISHES_KEY, allWishes);
       this.closeWishModal();
       this.loadData();
       wx.showToast({ title: '保存成功' });
@@ -255,25 +238,30 @@ Page({
     });
   },
 
-  // 标记心愿完成
-  async toggleWishStatus(e) {
+  // 切换心愿状态
+  toggleWishStatus(e) {
     const wish = e.currentTarget.dataset.wish;
-    const newStatus = wish.status === 'pending' ? 'done' : 'pending';
-    await db.collection('wishes').doc(wish._id).update({
-      data: { status: newStatus }
-    });
-    this.loadData();
+    const allWishes = wx.getStorageSync(WISHES_KEY) || [];
+    const index = allWishes.findIndex(w => w._id === wish._id);
+    
+    if (index !== -1) {
+      allWishes[index].status = wish.status === 'pending' ? 'done' : 'pending';
+      wx.setStorageSync(WISHES_KEY, allWishes);
+      this.loadData();
+    }
   },
 
   // 删除心愿
-  async deleteWish(e) {
+  deleteWish(e) {
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: '确认删除',
       content: '确定删除这个心愿吗？',
-      success: async (res) => {
+      success: (res) => {
         if (res.confirm) {
-          await db.collection('wishes').doc(id).remove();
+          const allWishes = wx.getStorageSync(WISHES_KEY) || [];
+          const newList = allWishes.filter(w => w._id !== id);
+          wx.setStorageSync(WISHES_KEY, newList);
           this.loadData();
           wx.showToast({ title: '已删除' });
         }

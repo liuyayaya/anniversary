@@ -1,5 +1,5 @@
-// pages/add/add.js
-const db = wx.cloud.database();
+// pages/add/add.js - 本地存储版
+const DB_KEY = 'anniversaries';
 
 Page({
   data: {
@@ -32,19 +32,19 @@ Page({
     }
   },
 
-  async loadAnniversary(id) {
-    try {
-      const { data } = await db.collection('anniversaries').doc(id).get();
+  // 加载纪念日数据（编辑用）
+  loadAnniversary(id) {
+    const list = wx.getStorageSync(DB_KEY) || [];
+    const item = list.find(i => i._id === id);
+    if (item) {
       this.setData({
-        title: data.title,
-        date: data.date,
-        type: data.type,
-        cycle: data.cycle,
-        reminder: data.reminder,
-        reminderDays: data.reminderDays || 3
+        title: item.title,
+        date: item.date,
+        type: item.type,
+        cycle: item.cycle,
+        reminder: item.reminder,
+        reminderDays: item.reminderDays || 3
       });
-    } catch (err) {
-      console.error(err);
     }
   },
 
@@ -72,7 +72,6 @@ Page({
       return `${y}${m}${dd}T${h}${min}00`;
     };
     
-    // 计算下次日期
     const now = new Date();
     let eventDate = new Date(year, month - 1, day, 9, 0, 0);
     if (eventDate <= now) {
@@ -106,7 +105,7 @@ Page({
   },
 
   // 保存
-  async save() {
+  save() {
     const { title, date, type, cycle, reminder, reminderDays, addToCalendar, id } = this.data;
     
     if (!title.trim()) { wx.showToast({ title: '请输入标题', icon: 'none' }); return; }
@@ -116,17 +115,34 @@ Page({
 
     try {
       const cycleText = this.data.cycles.find(c => c.value === cycle)?.label || '每年';
+      
       const data = {
-        title: title.trim(), date, type, cycle, cycleText, reminder, reminderDays,
-        updatedAt: db.serverDate()
+        title: title.trim(),
+        date,
+        type,
+        cycle,
+        cycleText,
+        reminder,
+        reminderDays,
+        updatedAt: new Date().toISOString()
       };
 
+      const list = wx.getStorageSync(DB_KEY) || [];
+      
       if (id) {
-        await db.collection('anniversaries').doc(id).update({ data });
+        // 编辑
+        const index = list.findIndex(i => i._id === id);
+        if (index !== -1) {
+          list[index] = { ...list[index], ...data };
+        }
       } else {
-        data.createdAt = db.serverDate();
-        await db.collection('anniversaries').add({ data });
+        // 新增
+        data._id = Date.now().toString();
+        data.createdAt = new Date().toISOString();
+        list.push(data);
       }
+      
+      wx.setStorageSync(DB_KEY, list);
 
       // 添加到日历
       if (addToCalendar && !id) {
@@ -137,12 +153,11 @@ Page({
         const fs = wx.getFileSystemManager();
         fs.writeFileSync(filePath, icsContent, 'utf8');
         
-        // 直接打开，让 iOS 自动识别 .ics
         wx.openDocument({
           filePath: filePath,
           fileType: 'ics',
           success: () => {
-            wx.showToast({ title: '打开后点右上角分享→添加到日历', icon: 'none', duration: 4000 });
+            wx.showToast({ title: '打开后分享到日历', icon: 'none', duration: 4000 });
           },
           fail: () => {
             wx.showToast({ title: '已保存', icon: 'success' });

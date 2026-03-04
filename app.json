@@ -34,13 +34,8 @@
   "permission": {
     "scope.writeCalendar": {
       "desc": "用于将纪念日添加到手机日历"
-    },
-    "scope.readCalendar": {
-      "desc": "用于读取手机日历中的纪念日"
     }
   },
-  "requiredBackgroundModes": ["background-fetch", "background-audio"],
-  "cloud": true,
   "style": "v2",
   "lazyCodeLoading": "requiredComponents"
 }

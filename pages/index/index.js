@@ -1,11 +1,10 @@
-// pages/index/index.js
-const db = wx.cloud.database();
+// pages/index/index.js - 本地存储版
+const DB_KEY = 'anniversaries';
 
 Page({
   data: {
     anniversaries: [],
-    upcomingList: [], // 即将到来的纪念日
-    showAddBtn: true
+    upcomingList: []
   },
 
   onShow() {
@@ -13,26 +12,15 @@ Page({
   },
 
   // 加载纪念日列表
-  async loadAnniversaries() {
-    wx.showLoading({ title: '加载中...' });
+  loadAnniversaries() {
+    const data = wx.getStorageSync(DB_KEY) || [];
     
-    try {
-      const { data } = await db.collection('anniversaries')
-        .orderBy('date', 'asc')
-        .get();
-      
-      const upcomingList = this.getUpcomingAnniversaries(data);
-      
-      this.setData({
-        anniversaries: data,
-        upcomingList
-      });
-    } catch (err) {
-      console.error(err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
-    } finally {
-      wx.hideLoading();
-    }
+    const upcomingList = this.getUpcomingAnniversaries(data);
+    
+    this.setData({
+      anniversaries: data,
+      upcomingList
+    });
   },
 
   // 计算即将到来的纪念日
@@ -44,10 +32,8 @@ Page({
       const itemDate = new Date(item.date);
       const thisYear = new Date(today.getFullYear(), itemDate.getMonth(), itemDate.getDate());
       
-      // 计算今年距离天数
       let daysDiff = Math.ceil((thisYear - today) / (1000 * 60 * 60 * 24));
       
-      // 如果已过，调整到明年
       if (daysDiff < 0) {
         if (item.cycle === 'yearly') {
           thisYear.setFullYear(thisYear.getFullYear() + 1);
@@ -78,33 +64,31 @@ Page({
   },
 
   // 删除纪念日
-  async deleteAnniversary(e) {
+  deleteAnniversary(e) {
     const id = e.currentTarget.dataset.id;
     
     wx.showModal({
       title: '确认删除',
       content: '删除后回忆和心愿清单也会被删除',
-      success: async (res) => {
+      success: (res) => {
         if (res.confirm) {
-          try {
-            await db.collection('anniversaries').doc(id).remove();
-            await db.collection('memories').where({ anniversaryId: id }).remove();
-            await db.collection('wishes').where({ anniversaryId: id }).remove();
-            
-            wx.showToast({ title: '删除成功' });
-            this.loadAnniversaries();
-          } catch (err) {
-            wx.showToast({ title: '删除失败', icon: 'none' });
-          }
+          const list = wx.getStorageSync(DB_KEY) || [];
+          const newList = list.filter(item => item._id !== id);
+          wx.setStorageSync(DB_KEY, newList);
+          
+          // 同时删除回忆和心愿
+          wx.setStorageSync('memories', (wx.getStorageSync('memories') || []).filter(m => m.anniversaryId !== id));
+          wx.setStorageSync('wishes', (wx.getStorageSync('wishes') || []).filter(w => w.anniversaryId !== id));
+          
+          wx.showToast({ title: '删除成功' });
+          this.loadAnniversaries();
         }
       }
     });
   },
 
-  // 下拉刷新
   onPullDownRefresh() {
-    this.loadAnniversaries().then(() => {
-      wx.stopPullDownRefresh();
-    });
+    this.loadAnniversaries();
+    wx.stopPullDownRefresh();
   }
 });
